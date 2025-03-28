@@ -50,17 +50,16 @@ jobs:
       
     - name: Configure kubectl for Minikube
       run: |
-        # # Option 1: Copy kubeconfig from your Linux VM
-        # # You'll need to set up an SSH key and store it in secrets
-        # mkdir -p ~/.kube
-        # echo "${{ secrets.MINIKUBE_CONFIG }}" > ~/.kube/config
-        # chmod 600 ~/.kube/config
+        # Since this machine is the action runner with Minikube running locally
+        # We can simply use the local Minikube configuration
         
-        # Option 2: If you're using a VM with public IP and Minikube API exposed
-        # No need for secrets, just configure directly
-        kubectl config set-cluster minikube --server=http://172.17.2.145:8443 --insecure-skip-tls-verify=true
-        kubectl config set-context minikube --cluster=ingress-ua
-        kubectl config use-context minikube
+        # Set up kubectl to use the ingress-ua context
+        kubectl config set-cluster ingress-ua --server=https://192.168.49.2:8443 --insecure-skip-tls-verify=true
+        kubectl config set-context ingress-ua --cluster=ingress-ua --user=ingress-ua
+        kubectl config use-context ingress-ua
+        
+        # If kubectl is already configured locally (since this is the runner machine)
+        # we might not need the above steps, and can just verify the connection
         
     - name: Verify kubectl connection
       run: kubectl cluster-info
