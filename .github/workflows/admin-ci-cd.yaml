@@ -12,7 +12,7 @@ env:
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted  # Critical - uses your pre-configured runner
     steps:
     - uses: actions/checkout@v4
     
@@ -22,7 +22,6 @@ jobs:
         node-version: '18'
         
     - name: Install dependencies
-      working-directory: ./
       run: npm ci
       
     - name: Login to Docker Hub
@@ -32,38 +31,17 @@ jobs:
         password: ${{ secrets.DOCKER_HUB_TOKEN }}
       
     - name: Build and push Docker image
-      working-directory: ./
       run: |
         docker build -t $DOCKER_USERNAME/$IMAGE_NAME:$GITHUB_SHA .
         docker push $DOCKER_USERNAME/$IMAGE_NAME:$GITHUB_SHA
         docker tag $DOCKER_USERNAME/$IMAGE_NAME:$GITHUB_SHA $DOCKER_USERNAME/$IMAGE_NAME:latest
         docker push $DOCKER_USERNAME/$IMAGE_NAME:latest
         
-    - name: Setup kubectl
-      uses: azure/setup-kubectl@v3
-      
-    - name: Configure kubectl
-      run: |
-        mkdir -p ~/.kube
-        # Use a secret containing your kubeconfig file
-        echo "${{ secrets.KUBE_CONFIG }}" > ~/.kube/config
-        chmod 600 ~/.kube/config
-        
-    - name: Verify kubectl connection
+    - name: Verify cluster access
       run: kubectl cluster-info
         
-    - name: Apply Kubernetes configurations
+    - name: Deploy to Kubernetes
       run: |
         kubectl apply -f k8s/
-        
-    - name: Restart admin service
-      run: |
         kubectl rollout restart deployment admin-deployment
         kubectl rollout status deployment admin-deployment
-
-  deploy-kubernetes:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    steps:
-      - name: Placeholder
-        run: echo "This job can be expanded for more specific kubernetes deployments"
