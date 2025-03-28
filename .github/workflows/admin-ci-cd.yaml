@@ -3,12 +3,10 @@ name: Email Service CI/CD
 
 on:
   push:
-    paths:
-      - '/'
+    
     branches: [ main ]
   pull_request:
-    paths:
-      - '/'
+     
     branches: [ main ]
 
 env:
