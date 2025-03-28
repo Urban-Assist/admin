@@ -43,5 +43,5 @@ jobs:
     - name: Deploy to Kubernetes
       run: |
         kubectl apply -f k8s/
-        kubectl rollout restart deployment admin-deployment
-        kubectl rollout status deployment admin-deployment
+        kubectl rollout restart deployment admin-service
+        kubectl rollout status deployment admin-service
