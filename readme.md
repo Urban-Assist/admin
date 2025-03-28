@@ -8,3 +8,4 @@ DATABASE_NAME = reviews
 DATABASE_USER = root
 DATABASE_PASSWORD = admin@vaibhav
 DATABASE_HOST = 127.0.0.1
+;
