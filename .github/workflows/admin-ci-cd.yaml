@@ -1,13 +1,10 @@
-# .github/workflows/email-ci.yaml
 name: Email Service CI/CD
 
 on:
   push:
-    
-    branches: [ main ]
+    branches: [main]
   pull_request:
-     
-    branches: [ main ]
+    branches: [main]
 
 env:
   IMAGE_NAME: admin
@@ -37,32 +34,23 @@ jobs:
     - name: Build and push Docker image
       working-directory: ./
       run: |
-      
         docker build -t $DOCKER_USERNAME/$IMAGE_NAME:$GITHUB_SHA .
         docker push $DOCKER_USERNAME/$IMAGE_NAME:$GITHUB_SHA
-
-        # Tag as latest for local development
         docker tag $DOCKER_USERNAME/$IMAGE_NAME:$GITHUB_SHA $DOCKER_USERNAME/$IMAGE_NAME:latest
         docker push $DOCKER_USERNAME/$IMAGE_NAME:latest
         
     - name: Setup kubectl
       uses: azure/setup-kubectl@v3
       
-    - name: Configure kubectl for Minikube
+    - name: Configure kubectl
       run: |
-        # Since this machine is the action runner with Minikube running locally
-        # We can simply use the local Minikube configuration
+        mkdir -p ~/.kube
+        # Use a secret containing your kubeconfig file
+        echo "${{ secrets.KUBE_CONFIG }}" > ~/.kube/config
+        chmod 600 ~/.kube/config
         
-        # Set up kubectl to use the ingress-ua context
-        kubectl config set-cluster ingress-ua --server=https://192.168.49.2:8443 --insecure-skip-tls-verify=true
-        kubectl config set-context ingress-ua --cluster=ingress-ua --user=ingress-ua
-        kubectl config use-context ingress-ua
-        
-        # If kubectl is already configured locally (since this is the runner machine)
-        # we might not need the above steps, and can just verify the connection
-        
-    # - name: Verify kubectl connection
-    #   run: kubectl cluster-info
+    - name: Verify kubectl connection
+      run: kubectl cluster-info
         
     - name: Apply Kubernetes configurations
       run: |
@@ -79,5 +67,3 @@ jobs:
     steps:
       - name: Placeholder
         run: echo "This job can be expanded for more specific kubernetes deployments"
-
-
