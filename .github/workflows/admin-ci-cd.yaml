@@ -45,4 +45,40 @@ jobs:
         docker tag $DOCKER_USERNAME/$IMAGE_NAME:$GITHUB_SHA $DOCKER_USERNAME/$IMAGE_NAME:latest
         docker push $DOCKER_USERNAME/$IMAGE_NAME:latest
         
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+      
+    - name: Configure kubectl for Minikube
+      run: |
+        # # Option 1: Copy kubeconfig from your Linux VM
+        # # You'll need to set up an SSH key and store it in secrets
+        # mkdir -p ~/.kube
+        # echo "${{ secrets.MINIKUBE_CONFIG }}" > ~/.kube/config
+        # chmod 600 ~/.kube/config
         
+        # Option 2: If you're using a VM with public IP and Minikube API exposed
+        # No need for secrets, just configure directly
+        kubectl config set-cluster minikube --server=http://172.17.2.145:8443 --insecure-skip-tls-verify=true
+        kubectl config set-context minikube --cluster=ingress-ua
+        kubectl config use-context minikube
+        
+    - name: Verify kubectl connection
+      run: kubectl cluster-info
+        
+    - name: Apply Kubernetes configurations
+      run: |
+        kubectl apply -f k8s/
+        
+    - name: Restart admin service
+      run: |
+        kubectl rollout restart deployment admin-deployment
+        kubectl rollout status deployment admin-deployment
+
+  deploy-kubernetes:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Placeholder
+        run: echo "This job can be expanded for more specific kubernetes deployments"
+
+
