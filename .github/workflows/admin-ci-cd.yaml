@@ -50,16 +50,36 @@ jobs:
       
     - name: Configure kubectl for Minikube
       run: |
-        # Since this machine is the action runner with Minikube running locally
-        # We can simply use the local Minikube configuration
+        # Create kubeconfig directory
+        mkdir -p ~/.kube
         
-        # Set up kubectl to use the ingress-ua context
-        kubectl config set-cluster ingress-ua --server=https://192.168.49.2:8443 --insecure-skip-tls-verify=true
-        kubectl config set-context ingress-ua --cluster=ingress-ua --user=ingress-ua
-        kubectl config use-context ingress-ua
+        # Get the Minikube certificate and token
+        MINIKUBE_TOKEN=$(cat /home/student/.kube/config | grep "token:" | awk '{print $2}')
         
-        # If kubectl is already configured locally (since this is the runner machine)
-        # we might not need the above steps, and can just verify the connection
+        # Create a kubeconfig file with token-based authentication
+        cat > ~/.kube/config <<EOF
+        apiVersion: v1
+        clusters:
+        - cluster:
+            insecure-skip-tls-verify: true
+            server: https://192.168.49.2:8443
+          name: ingress-ua
+        contexts:
+        - context:
+            cluster: ingress-ua
+            user: ingress-ua
+          name: ingress-ua
+        current-context: ingress-ua
+        kind: Config
+        preferences: {}
+        users:
+        - name: ingress-ua
+          user:
+            token: ${MINIKUBE_TOKEN}
+        EOF
+        
+        # Ensure proper permissions
+        chmod 600 ~/.kube/config
         
     - name: Verify kubectl connection
       run: kubectl cluster-info
