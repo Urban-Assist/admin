@@ -1,19 +1,22 @@
 import express from "express";
- import cors from "cors";
- const app = express();
-/*cors allow access to the network from the 
-cross-origin. means www.example.com can allow 
-resource usage to the www.api.com is the later
- one is whitelisted in the former one.*/
+import axios from "axios";
+import cors from "cors";
+import dotenv from "dotenv";
+dotenv.config();
+const app = express();
+
+//CORS configuration 
+
 app.use(
+  
   cors({
     origin: process.env.CORS_ORIGIN, //whitelisted the given url
     credentials: true,
   })
 );
- 
 
- 
+
+//JSON body parser 
 app.use(express.json({ limit: "20kb" }));
 app.use(
   express.urlencoded({
@@ -22,11 +25,16 @@ app.use(
   })
 );
 
+//Static files
 app.use(express.static("public"));
- 
+
+
+  
+
 // routes import
-import mailRouter from "./routes/mail.route.js";
- 
+import {router} from "./routes/services.routes.js";
+
 //routes declaration
- app.use("/mail", mailRouter);
+app.use("/admin",router); 
+
 export { app };
